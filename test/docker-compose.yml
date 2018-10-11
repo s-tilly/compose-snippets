@@ -1,0 +1,38 @@
+version: '3.1'
+
+services:
+
+  wordpress:
+    image: wordpress:php7.2
+    restart: always
+    expose:
+      - 80
+    labels:
+      - "traefik.frontend.rule=Host:lulu.localdomain"
+    environment:
+      WORDPRESS_DB_PASSWORD: [USE ENV]
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_HOST: db
+    networks:
+      - lulu
+
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: [USE ENV or better use random]
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: [USE ENV]
+      volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - lulu
+
+networks:
+  lulu:
+    external:
+      name: traefik_lulu
+
+volumes:
+  mariadb:

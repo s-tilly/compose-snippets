@@ -1,0 +1,32 @@
+---
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:1.7-alpine
+    #command: --api --docker --web --metrics.prometheus --metrics.prometheus.buckets="0.1,0.3,1.2,5.0"
+    command: --metrics.prometheus --metrics.prometheus.buckets="0.1,0.3,1.2,5.0"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # The Web UI (enabled by --api) or in config file
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./certs:/certs
+    networks:
+      - monitoring
+      - lulu
+      - registry
+      - nextcloud
+
+networks:
+  monitoring:
+    driver: bridge
+  lulu:
+    driver: bridge
+  registry:
+    driver: bridge
+  nextcloud:
+    driver: bridge
+

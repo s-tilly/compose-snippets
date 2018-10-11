@@ -1,0 +1,43 @@
+---
+version: '3.7'
+
+services:
+  registry:
+    image: registry:latest
+    container_name: registry
+    #volumes:
+    #  - ./registry-config.yml:/etc/docker/registry/config.yml
+    environment:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    expose:
+      - 5000
+    labels:
+      - "traefik.frontend.rule=Host:registry.localdomain"
+      - "traefik.port=5000"
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+    networks:
+      - registry
+
+  registry-ui:
+    image: konradkleine/docker-registry-frontend:v2
+    container_name: registry-ui
+    #volumes:
+    environment:
+      - ENV_DOCKER_REGISTRY_HOST=registry
+      - ENV_DOCKER_REGISTRY_PORT=5000
+      - ENV_REGISTRY_PROXY_FQDN=registry.localdomain
+      - ENV_REGISTRY_PROXY_PORT=443
+    expose:
+      - 80
+    labels:
+      - "traefik.frontend.rule=Host:registry-ui.localdomain"
+      - "traefik.enable=true"
+    networks:
+      - registry
+
+networks:
+  registry:
+    external:
+      name: traefik_registry

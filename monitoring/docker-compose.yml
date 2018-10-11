@@ -1,0 +1,78 @@
+---
+version: '3.7'
+
+services:
+  cadvisor:
+    image: google/cadvisor
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    expose:
+      - 8080
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:v2.3.2
+    container_name: prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention=200h'
+    expose:
+      - 9090
+    ports:
+      - "9090:9090"
+    labels:
+      - "traefik.frontend.rule=Host:prometheus.localdomain"
+      - "traefik.enable=true"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:5.1.5
+    container_name: grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.frontend.rule=Host:grafana.localdomain"
+      - "traefik.enable=true"
+      - "traefik.frontend.entryPoints=https"
+
+  node-exporter:
+    image: prom/node-exporter:v0.16.0
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    expose:
+      - 9100
+    networks:
+      - monitoring
+
+volumes:
+  # Par défaut, mets les datas dans /var/lib/docker/volumes/
+  prometheus-data: {} # /var/lib/docker/volumes/monitoring_prometheus-data/_data
+  grafana-data: {} # /var/lib/docker/volumes/monitoring_grafana-data/
+
+networks:
+  monitoring:
+    external:
+      name: traefik_default

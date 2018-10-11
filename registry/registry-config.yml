@@ -1,0 +1,34 @@
+# Fichier a surcharger https://docs.docker.com/registry/configuration/#override-specific-configuration-options
+# Basé sur https://github.com/docker/distribution/blob/master/cmd/registry/config-example.yml
+# et sur ce que j'avais sans surcharger...
+
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: ":5000"
+# D'après https://ops.tips/gists/retrieving-docker-registry-metrics-using-prometheus/
+# Mais ça nécessite la version master du registry (pas la 2.6.2 en tout cas
+#########################################
+#  debug:
+#    addr: ":5001"
+#    prometheus:
+#      enabled: true
+#      path: "/metrics"
+  headers:
+    X-Content-Type-Options: [nosniff]
+#auth:
+#  htpasswd:
+#    realm: basic-realm
+#    path: /etc/registry
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
